@@ -1,41 +1,83 @@
 'use client';
 
 import { Container, Grid, Paper } from '@mantine/core';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
+import FloatingLyrics from './FloatingLyrics';
 
 const ImageBox = ({ 
   imageId, 
   isHovered, 
   onHover, 
   onLeave,
-  delay 
+  delay,
+  anyHovered,
+  isMusicBox = false,
+  onPlayingChange
 }: { 
   imageId: number;
   isHovered: boolean;
   onHover: () => void;
   onLeave: () => void;
   delay: number;
+  anyHovered: boolean;
+  isMusicBox?: boolean;
+  onPlayingChange?: (isPlaying: boolean) => void;
 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoaded(true);
     }, delay);
-
     return () => clearTimeout(timer);
   }, [delay]);
 
+  useEffect(() => {
+    if (isMusicBox && !isLocked) {
+      setIsPlaying(isHovered);
+    }
+  }, [isHovered, isMusicBox, isLocked]);
+
+  useEffect(() => {
+    if (isMusicBox) {
+      onPlayingChange?.(isPlaying);
+    }
+  }, [isPlaying, isMusicBox, onPlayingChange]);
+
+  const handleClick = () => {
+    if (isMusicBox) {
+      if (isLocked) {
+        setIsLocked(false);
+        setIsPlaying(false);
+      } else {
+        setIsLocked(true);
+        setIsPlaying(true);
+      }
+    }
+  };
+
+  const handleMouseLeave = () => {
+    onLeave();
+    if (isMusicBox && !isLocked) {
+      setIsPlaying(false);
+    }
+  };
+
   return (
     <Paper
-      shadow="sm"
+      className="card"
       style={{
         position: 'relative',
-        height: '140px',
+        height: '160px',
         overflow: 'hidden',
+        cursor: isMusicBox ? 'pointer' : 'default',
         transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
         transform: isHovered 
-          ? 'scale(1.15) translateY(-0.5em)'
+          ? 'scale(1.2) translateY(-1em)'
           : isLoaded 
             ? 'scale(1)' 
             : 'scale(0.95)',
@@ -46,19 +88,63 @@ const ImageBox = ({
         zIndex: isHovered ? 2 : 1,
       }}
       onMouseEnter={onHover}
-      onMouseLeave={onLeave}
+      onMouseLeave={handleMouseLeave}
+      onClick={handleClick}
     >
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          backgroundImage: `url(https://picsum.photos/800/450?random=${imageId})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-          filter: isHovered ? 'brightness(1)' : 'brightness(0.8)',
-        }}
-      />
+      {isMusicBox ? (
+        <>
+          <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+            <Image
+              src="/images/images.jpeg"
+              alt="Album Cover"
+              fill
+              style={{
+                objectFit: 'cover',
+                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                filter: !anyHovered ? 'brightness(0.5)' : 
+                        isHovered ? 'brightness(1)' : 
+                        'brightness(0.25)',
+              }}
+            />
+          </div>
+          <iframe
+            ref={iframeRef}
+            width="100%"
+            height="100%"
+            scrolling="no"
+            frameBorder="no"
+            allow="autoplay"
+            src={isPlaying ? 
+              "https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/suicidal-idol/ecstacy-slowed&auto_play=true" : 
+              "about:blank"
+            }
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              opacity: 0,
+              pointerEvents: 'none',
+            }}
+          />
+          <div className="absolute bottom-2 right-2 text-white">
+            {isLocked ? '🔒 Playing' : isPlaying ? '▶ Playing' : '▶ Play'}
+          </div>
+        </>
+      ) : (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            backgroundImage: `url(https://picsum.photos/800/450?random=${imageId})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+            filter: !anyHovered ? 'brightness(0.5)' : 
+                    isHovered ? 'brightness(1)' : 
+                    'brightness(0.25)',
+          }}
+        />
+      )}
     </Paper>
   );
 };
@@ -66,13 +152,14 @@ const ImageBox = ({
 const ColoredGrid = () => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [isPageLoaded, setIsPageLoaded] = useState(false);
+  const [isMusicPlaying, setIsMusicPlaying] = useState(false);
 
   useEffect(() => {
     setIsPageLoaded(true);
   }, []);
 
   const gridItems = [
-    { span: { base: 12, xs: 4 } },
+    { span: { base: 12, xs: 4 }, isMusicBox: true },  // First item is music box
     { span: { base: 12, xs: 8 } },
     { span: { base: 12, xs: 8 } },
     { span: { base: 12, xs: 4 } },
@@ -87,9 +174,11 @@ const ColoredGrid = () => {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'var(--background)',
+      background: '#141414',
       padding: '2rem',
+      overflow: 'hidden',
     }}>
+      <FloatingLyrics isVisible={hoveredIndex === 0 || isMusicPlaying} />
       <Container 
         size="sm"
         style={{
@@ -110,6 +199,9 @@ const ColoredGrid = () => {
                 onHover={() => setHoveredIndex(index)}
                 onLeave={() => setHoveredIndex(null)}
                 delay={100 + index * 100}
+                anyHovered={hoveredIndex !== null}
+                isMusicBox={item.isMusicBox}
+                onPlayingChange={index === 0 ? setIsMusicPlaying : undefined}
               />
             </Grid.Col>
           ))}
@@ -119,4 +211,4 @@ const ColoredGrid = () => {
   );
 };
 
-export default ColoredGrid; 
+export default ColoredGrid;
