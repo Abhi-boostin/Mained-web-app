@@ -10,6 +10,7 @@ import { SoundCloudTrack } from '@/utils/soundcloud';
 import { getWeeklyTopTracks } from '@/utils/lastfm';
 import { LastFmTrack } from '@/utils/lastfm';
 import { getYoutubeVideoId } from '@/utils/youtube';
+import { useRouter } from 'next/navigation';
 
 const ImageBox = ({ 
   imageId, 
@@ -174,6 +175,7 @@ const ColoredGrid = () => {
   const [topTracks, setTopTracks] = useState<LastFmTrack[]>([]);
   const [selectedYoutubeId, setSelectedYoutubeId] = useState<string | null>(null);
   const [isYoutubePlayerVisible, setIsYoutubePlayerVisible] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     setIsPageLoaded(true);
@@ -206,8 +208,23 @@ const ColoredGrid = () => {
     try {
       const videoId = await getYoutubeVideoId(track.name, track.artist);
       if (videoId) {
-        setSelectedYoutubeId(videoId);
-        setIsYoutubePlayerVisible(true);
+        const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+        
+        const playerTrack = {
+          name: track.name,
+          artist: track.artist,
+          cover: thumbnailUrl,
+          youtubeId: videoId,
+          favorited: false,
+          url: `https://youtube.com/watch?v=${videoId}`
+        };
+
+        // Store track data in localStorage
+        localStorage.setItem('currentTrack', JSON.stringify(playerTrack));
+        
+        // Use router.push with a complete URL
+        router.push('/player');
+        router.refresh(); // Force a refresh to ensure the player loads new data
       }
     } catch (error) {
       console.error('Error getting YouTube video:', error);
@@ -224,7 +241,7 @@ const ColoredGrid = () => {
       overflowY: 'auto',
       height: '100vh',
     }}>
-      <SearchBar onSearch={handleSearch} />
+      <SearchBar />
       <div style={{
         flex: 1,
         display: 'flex',
@@ -326,8 +343,7 @@ const ColoredGrid = () => {
               </div>
             ))}
           </div>
-        </div>
-
+        </div>  
         {isYoutubePlayerVisible && selectedYoutubeId && (
           <div style={{
             width: '100%',

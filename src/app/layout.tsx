@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { MantineProvider } from '@mantine/core';
 import '@mantine/core/styles.css';
 import "./globals.css";
+import { TrackProvider } from '@/context/TrackContext';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,9 +28,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <MantineProvider>
-          {children}
-        </MantineProvider>
+        <TrackProvider>
+          <MantineProvider>
+            {children}
+          </MantineProvider>
+        </TrackProvider>
       </body>
     </html>
   );

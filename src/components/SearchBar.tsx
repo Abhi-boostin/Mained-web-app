@@ -5,16 +5,16 @@ import { IconSearch } from '@tabler/icons-react';
 import { useState } from 'react';
 import { searchLastFmTracks, LastFmTrack } from '@/utils/lastfm';
 import { getYoutubeVideoId } from '@/utils/youtube';
+import { useRouter } from 'next/navigation';
 
-interface SearchBarProps {
-  onSearch: (track: LastFmTrack & { youtubeId?: string }) => void;
-}
+interface SearchBarProps {}
 
-const SearchBar = ({ onSearch }: SearchBarProps) => {
+const SearchBar = () => {
   const [query, setQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [searchResults, setSearchResults] = useState<LastFmTrack[]>([]);
   const [showResults, setShowResults] = useState(false);
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,9 +36,23 @@ const SearchBar = ({ onSearch }: SearchBarProps) => {
     try {
       const videoId = await getYoutubeVideoId(track.name, track.artist);
       if (videoId) {
-        onSearch({ ...track, youtubeId: videoId });
+        const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+        
+        const playerTrack = {
+          name: track.name,
+          artist: track.artist,
+          cover: thumbnailUrl,
+          youtubeId: videoId,
+          favorited: false,
+          url: `https://youtube.com/watch?v=${videoId}`
+        };
+
+        localStorage.setItem('currentTrack', JSON.stringify(playerTrack));
         setShowResults(false);
         setQuery('');
+        
+        // Navigate to player page
+        router.push('/player');
       }
     } catch (error) {
       console.error('Error getting YouTube video:', error);
