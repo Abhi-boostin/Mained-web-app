@@ -5,6 +5,10 @@ import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import FloatingLyrics from './FloatingLyrics';
 import { IconSearch } from '@tabler/icons-react';
+import SearchBar from './SearchBar';
+import { SoundCloudTrack } from '@/utils/soundcloud';
+import { getWeeklyTopTracks } from '@/utils/lastfm';
+import { LastFmTrack } from '@/utils/lastfm';
 
 const ImageBox = ({ 
   imageId, 
@@ -14,7 +18,8 @@ const ImageBox = ({
   delay,
   anyHovered,
   isMusicBox = false,
-  onPlayingChange
+  onPlayingChange,
+  track
 }: { 
   imageId: number;
   isHovered: boolean;
@@ -24,6 +29,7 @@ const ImageBox = ({
   anyHovered: boolean;
   isMusicBox?: boolean;
   onPlayingChange?: (isPlaying: boolean) => void;
+  track?: SoundCloudTrack;
 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -155,12 +161,7 @@ const ColoredGrid = () => {
   const [isPageLoaded, setIsPageLoaded] = useState(false);
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-
-  useEffect(() => {
-    setIsPageLoaded(true);
-  }, []);
-
-  const gridItems = [
+  const [gridItems, setGridItems] = useState<{ span: { base: number; xs: number }; isMusicBox: boolean; track?: SoundCloudTrack }[]>([
     { span: { base: 12, xs: 4 }, isMusicBox: true },  // First item is music box
     { span: { base: 12, xs: 8 } },
     { span: { base: 12, xs: 8 } },
@@ -168,7 +169,62 @@ const ColoredGrid = () => {
     { span: { base: 12, xs: 3 } },
     { span: { base: 12, xs: 3 } },
     { span: { base: 12, xs: 6 } },
-  ];
+  ]);
+  const [topTracks, setTopTracks] = useState<LastFmTrack[]>([]);
+  const [visibleTracks, setVisibleTracks] = useState<number>(0);
+  const topTracksRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setIsPageLoaded(true);
+    getWeeklyTopTracks().then(tracks => {
+      const formattedTracks = tracks.map(track => ({
+        name: track.name,
+        artist: typeof track.artist === 'string' ? track.artist : track.artist.name,
+        image: track.image,
+        url: track.url,
+        mbid: track.mbid
+      }));
+      setTopTracks(formattedTracks);
+    });
+  }, []);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            // Gradually reveal tracks when section is visible
+            const interval = setInterval(() => {
+              setVisibleTracks(prev => {
+                if (prev < topTracks.length) return prev + 1;
+                clearInterval(interval);
+                return prev;
+              });
+            }, 100);
+            observer.disconnect();
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    if (topTracksRef.current) {
+      observer.observe(topTracksRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [topTracks.length]);
+
+  const handleSearch = async (tracks: SoundCloudTrack[]) => {
+    // Update grid items with search results
+    const newGridItems = tracks.map(track => ({
+      span: { base: 12, xs: 4 },
+      isMusicBox: true,
+      track: track
+    }));
+    
+    setGridItems(newGridItems);
+  };
 
   return (
     <div style={{
@@ -176,81 +232,87 @@ const ColoredGrid = () => {
       display: 'flex',
       flexDirection: 'column',
       background: '#141414',
-      overflow: 'hidden',
+      position: 'relative',
+      overflowY: 'auto',
+      height: '100vh',
     }}>
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        padding: '1rem',
-        background: '#000000',
-        backdropFilter: 'blur(10px)',
-        zIndex: 100,
-      }}>
-        <Container size="sm" style={{ maxWidth: '800px' }}>
-          <TextInput
-            placeholder="Search..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.currentTarget.value)}
-            leftSection={<IconSearch size={16} />}
-            styles={{
-              root: {
-                width: '100%',
-              },
-              input: {
-                backgroundColor: '#000000',
-                color: '#ffffff',
-                border: '1px solid #333',
-                height: '45px',
-                fontSize: '16px',
-                '&:focus': {
-                  borderColor: '#666',
-                },
-              },
-              section: {
-                color: '#666',
-              },
-            }}
-          />
-        </Container>
-      </div>
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '5rem 2rem 2rem 2rem',
-      }}>
-        <FloatingLyrics isVisible={hoveredIndex === 0 || isMusicPlaying} />
-        <Container 
-          size="sm"
-          style={{
-            maxWidth: '800px',
-            width: '100%',
-            margin: '0 auto',
-            transform: isPageLoaded ? 'translateY(0)' : 'translateY(20px)',
-            opacity: isPageLoaded ? 1 : 0,
-            transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+      <SearchBar onSearch={handleSearch} />
+      <Container 
+        size="sm"
+        style={{
+          maxWidth: '800px',
+          width: '100%',
+          margin: '6rem auto 2rem',
+          paddingBottom: '4rem',
+          transform: isPageLoaded ? 'translateY(0)' : 'translateY(20px)',
+          opacity: isPageLoaded ? 1 : 0,
+          transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+        }}
+      >
+        <Grid gutter="md">
+          {gridItems.map((item, index) => (
+            <Grid.Col key={index} span={item.span}>
+              <ImageBox 
+                imageId={index + 1}
+                isHovered={hoveredIndex === index}
+                onHover={() => setHoveredIndex(index)}
+                onLeave={() => setHoveredIndex(null)}
+                delay={100 + index * 100}
+                anyHovered={hoveredIndex !== null}
+                track={item.track}
+                onPlayingChange={index === 0 ? setIsMusicPlaying : undefined}
+              />
+            </Grid.Col>
+          ))}
+        </Grid>
+      </Container>
+
+      {/* Top Tracks Section */}
+      <div
+        ref={topTracksRef}
+        style={{
+          padding: '2rem',
+          marginTop: '2rem',
+          marginBottom: '4rem',
+          textAlign: 'center',
+          opacity: isPageLoaded ? 1 : 0,
+          transform: isPageLoaded ? 'translateY(0)' : 'translateY(20px)',
+          transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+        }}
+      >
+        <h2 
+          style={{ 
+            fontSize: '36px',
+            fontWeight: 'bold',
+            fontFamily: 'BenguiatBold',
+            background: 'linear-gradient(180deg, #ff0000 0%, #300000 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            marginBottom: '1.5rem'
           }}
         >
-          <Grid gutter="md">
-            {gridItems.map((item, index) => (
-              <Grid.Col key={index} span={item.span}>
-                <ImageBox 
-                  imageId={index + 1}
-                  isHovered={hoveredIndex === index}
-                  onHover={() => setHoveredIndex(index)}
-                  onLeave={() => setHoveredIndex(null)}
-                  delay={100 + index * 100}
-                  anyHovered={hoveredIndex !== null}
-                  isMusicBox={item.isMusicBox}
-                  onPlayingChange={index === 0 ? setIsMusicPlaying : undefined}
-                />
-              </Grid.Col>
-            ))}
-          </Grid>
-        </Container>
+          Weekly Top Tracks
+        </h2>
+        <div style={{ color: '#fff' }}>
+          {topTracks.slice(0, visibleTracks).map((track, index) => (
+            <div 
+              key={index}
+              style={{
+                fontSize: '16px',
+                fontWeight: 'bold',
+                margin: '0.5rem 0',
+                opacity: 0.8,
+                transform: `translateY(${20 * (1 - Math.min(1, (index + 1) / visibleTracks))}px)`,
+                transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+                cursor: 'pointer',
+              }}
+              onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+              onMouseLeave={e => e.currentTarget.style.opacity = '0.8'}
+            >
+              {index + 1}. {track.name} - {track.artist}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
