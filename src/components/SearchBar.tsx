@@ -34,28 +34,36 @@ const SearchBar = () => {
 
   const handleTrackSelect = async (track: LastFmTrack) => {
     try {
-      const videoId = await getYoutubeVideoId(track.name, track.artist);
-      if (videoId) {
-        const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
-        
-        const playerTrack = {
-          name: track.name,
-          artist: track.artist,
-          cover: thumbnailUrl,
-          youtubeId: videoId,
-          favorited: false,
-          url: `https://youtube.com/watch?v=${videoId}`
-        };
-
-        localStorage.setItem('currentTrack', JSON.stringify(playerTrack));
-        setShowResults(false);
-        setQuery('');
-        
-        // Navigate to player page
-        router.push('/player');
+      setIsLoading(true);
+      console.log('Searching for track:', track.name, 'by', track.artist);
+      
+      const youtubeId = await getYoutubeVideoId(track.name, track.artist);
+      console.log('YouTube video ID result:', youtubeId);
+      
+      if (!youtubeId) {
+        alert('Could not find this song on YouTube');
+        return;
       }
+
+      const trackData = {
+        name: track.name,
+        artist: track.artist,
+        cover: track.image || '/default-cover.jpg',
+        youtubeId: youtubeId
+      };
+
+      // Save to localStorage with autoplay flag
+      localStorage.setItem('currentTrack', JSON.stringify(trackData));
+      localStorage.setItem('shouldAutoplay', 'true');
+
+      // Navigate to player
+      router.push('/player');
     } catch (error) {
-      console.error('Error getting YouTube video:', error);
+      console.error('Error selecting track:', error);
+      alert('An error occurred while loading the track. Please try again.');
+    } finally {
+      setIsLoading(false);
+      setShowResults(false);
     }
   };
 
