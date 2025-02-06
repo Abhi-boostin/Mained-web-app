@@ -9,6 +9,7 @@ import SearchBar from './SearchBar';
 import { SoundCloudTrack } from '@/utils/soundcloud';
 import { getWeeklyTopTracks } from '@/utils/lastfm';
 import { LastFmTrack } from '@/utils/lastfm';
+import { getYoutubeVideoId } from '@/utils/youtube';
 
 const ImageBox = ({ 
   imageId, 
@@ -171,6 +172,8 @@ const ColoredGrid = () => {
     { span: { base: 12, xs: 6 } },
   ]);
   const [topTracks, setTopTracks] = useState<LastFmTrack[]>([]);
+  const [selectedYoutubeId, setSelectedYoutubeId] = useState<string | null>(null);
+  const [isYoutubePlayerVisible, setIsYoutubePlayerVisible] = useState(false);
 
   useEffect(() => {
     setIsPageLoaded(true);
@@ -188,15 +191,27 @@ const ColoredGrid = () => {
     });
   }, []);
 
-  const handleSearch = async (tracks: SoundCloudTrack[]) => {
-    // Update grid items with search results
-    const newGridItems = tracks.map(track => ({
-      span: { base: 12, xs: 4 },
-      isMusicBox: true,
-      track: track
-    }));
-    
-    setGridItems(newGridItems);
+  const handleSearch = async (track: LastFmTrack & { youtubeId?: string }) => {
+    try {
+      if (track.youtubeId) {
+        setSelectedYoutubeId(track.youtubeId);
+        setIsYoutubePlayerVisible(true);
+      }
+    } catch (error) {
+      console.error('Error handling search:', error);
+    }
+  };
+
+  const handleTrackClick = async (track: LastFmTrack) => {
+    try {
+      const videoId = await getYoutubeVideoId(track.name, track.artist);
+      if (videoId) {
+        setSelectedYoutubeId(videoId);
+        setIsYoutubePlayerVisible(true);
+      }
+    } catch (error) {
+      console.error('Error getting YouTube video:', error);
+    }
   };
 
   return (
@@ -278,6 +293,7 @@ const ColoredGrid = () => {
             {topTracks.map((track, index) => (
               <div 
                 key={index}
+                onClick={() => handleTrackClick(track)}
                 style={{
                   fontSize: '16px',
                   fontWeight: 'bold',
@@ -311,6 +327,29 @@ const ColoredGrid = () => {
             ))}
           </div>
         </div>
+
+        {isYoutubePlayerVisible && selectedYoutubeId && (
+          <div style={{
+            width: '100%',
+            maxWidth: '800px',
+            margin: '2rem auto',
+            aspectRatio: '16/9',
+            borderRadius: '8px',
+            overflow: 'hidden',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+          }}>
+            <iframe
+              width="100%"
+              height="100%"
+              src={`https://www.youtube.com/embed/${selectedYoutubeId}?autoplay=1`}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              style={{
+                border: 'none',
+              }}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

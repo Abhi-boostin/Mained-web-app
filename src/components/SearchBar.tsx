@@ -7,7 +7,7 @@ import { searchLastFmTracks, LastFmTrack } from '@/utils/lastfm';
 import { getYoutubeVideoId } from '@/utils/youtube';
 
 interface SearchBarProps {
-  onSearch: (track: LastFmTrack) => void;
+  onSearch: (track: LastFmTrack & { youtubeId?: string }) => void;
 }
 
 const SearchBar = ({ onSearch }: SearchBarProps) => {
