@@ -73,14 +73,35 @@ const ModernMusicPlayer = () => {
             playsinline: 1,
             origin: window.location.origin,
             enablejsapi: 1,
-            host: 'https://www.youtube.com'
+            host: 'https://www.youtube.com',
+            // Add mobile-specific options
+            mute: 0,
+            showinfo: 0,
+            iv_load_policy: 3
           },
           events: {
             onReady: (event: any) => {
-              setYoutubePlayer(event.target);
-              setDuration(event.target.getDuration());
+              const player = event.target;
+              setYoutubePlayer(player);
+              setDuration(player.getDuration());
               setIsPlayerReady(true);
-              event.target.playVideo();
+              
+              // Handle mobile autoplay
+              const startPlayback = async () => {
+                try {
+                  await player.playVideo();
+                  document.removeEventListener('touchstart', startPlayback);
+                } catch (error) {
+                  console.error('Playback error:', error);
+                }
+              };
+
+              if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+                document.addEventListener('touchstart', startPlayback);
+              } else {
+                player.playVideo();
+              }
+              
               startProgressUpdate();
             },
             onStateChange: (event: any) => {
@@ -181,24 +202,23 @@ const ModernMusicPlayer = () => {
     }
   };
 
-  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  // Add touch event handling for progress bar
+  const handleProgressInteraction = (e: React.MouseEvent | React.TouchEvent) => {
     if (!youtubePlayer || !duration || !isPlayerReady) return;
     
     try {
       const progressBar = e.currentTarget;
       const rect = progressBar.getBoundingClientRect();
-      const clickPosition = e.clientX - rect.left;
+      const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
+      const clickPosition = clientX - rect.left;
       const progressBarWidth = rect.width;
       const percentage = (clickPosition / progressBarWidth) * 100;
       const seekTime = (duration * percentage) / 100;
       
-      // Log for debugging
-      console.log('Seeking to:', seekTime, 'seconds');
-      
       youtubePlayer.seekTo(seekTime, true);
       setProgress(percentage);
     } catch (error) {
-      console.error('Error in handleProgressClick:', error);
+      console.error('Error in progress interaction:', error);
     }
   };
 
@@ -230,7 +250,12 @@ const ModernMusicPlayer = () => {
         <div className="modern-player__progress">
           <div 
             className="progress-bar" 
-            onClick={handleProgressClick}
+            onClick={handleProgressInteraction}
+            onTouchStart={handleProgressInteraction}
+            role="slider"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={progress}
           >
             <div 
               className="progress-bar__fill" 
@@ -280,4 +305,4 @@ const ModernMusicPlayer = () => {
   );
 };
 
-export default ModernMusicPlayer; 
+export default ModernMusicPlayer;

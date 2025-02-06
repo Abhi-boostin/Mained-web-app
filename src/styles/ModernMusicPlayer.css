@@ -105,6 +105,9 @@
   position: relative;
   transition: all 0.2s ease;
   box-shadow: 0 0 10px rgba(29,185,84,0.2);
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .progress-bar:hover {
@@ -182,15 +185,16 @@
 }
 
 .hidden-player {
-  position: fixed !important;
+  position: absolute !important;
   bottom: 0 !important;
   right: 0 !important;
-  width: 100px !important;
-  height: 100px !important;
-  opacity: 0.01 !important;
+  width: 1px !important;
+  height: 1px !important;
+  opacity: 0 !important;
   pointer-events: none !important;
   z-index: -1;
   transform: translateZ(0);
+  overflow: hidden;
 }
 
 /* Add glow effects */
@@ -284,4 +288,28 @@
 
 .control-button.lyrics:hover {
   background: rgba(255, 255, 255, 0.25);
-} 
+}
+
+/* Add these rules to your existing CSS */
+
+@media (max-width: 768px) {
+  .modern-player {
+    padding: 1rem;
+  }
+
+  .modern-player__controls {
+    padding: 1rem;
+  }
+
+  .modern-player__buttons {
+    gap: 0.5rem;
+  }
+
+  .control-button {
+    padding: 0.5rem;
+  }
+
+  .progress-bar {
+    height: 6px; /* Slightly larger for touch targets */
+  }
+}
