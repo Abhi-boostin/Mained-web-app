@@ -247,7 +247,7 @@ const ColoredGrid = () => {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        padding: '5rem 2rem 2rem 2rem',
+        padding: 'clamp(1rem, 5vw, 5rem) clamp(1rem, 3vw, 2rem)',
         overflowY: 'auto',
       }}>
         <FloatingLyrics isVisible={hoveredIndex === 0 || isMusicPlaying} />
