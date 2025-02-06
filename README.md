@@ -1,36 +1,109 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Mained - Modern Music Player
+
+A sleek and modern web-based music player that combines Last.fm's music database with YouTube's playback capabilities.
+
+## Features
+
+- 🎵 Search and play music from YouTube
+- 🎨 Beautiful, responsive UI with album artwork
+- ⏯️ Full playback controls (play, pause, seek)
+- 🔍 Search tracks using Last.fm's extensive database
+- ❤️ Favorite tracks functionality
+- 🎨 Dynamic background based on album art
+- ⏱️ Real-time progress bar with seek functionality
+
+## Tech Stack
+
+- **Frontend Framework**: Next.js 15
+- **Styling**: CSS Modules & TailwindCSS
+- **Icons**: Tabler Icons
+- **UI Components**: Mantine
+- **Package Manager**: pnpm
+- **APIs**: 
+  - YouTube Data API v3
+  - Last.fm API
 
 ## Getting Started
 
-First, run the development server:
-
+1. Clone the repository:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/your-username/mained.git
+cd mained
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies:
+```bash
+pnpm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Create a `.env.local` file with your API keys:
+```env
+YOUTUBE_API_KEY=your_youtube_api_key
+LASTFM_API_KEY=your_lastfm_api_key
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Run the development server:
+```bash
+pnpm dev
+```
 
-## Learn More
+Open [http://localhost:3000](http://localhost:3000) to view the app.
 
-To learn more about Next.js, take a look at the following resources:
+## Project Structure
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+src/
+├── app/                 # Next.js app directory
+├── components/         # React components
+│   ├── ModernMusicPlayer.tsx
+│   ├── SearchBar.tsx
+│   └── ColoredGrid.tsx
+├── styles/            # CSS styles
+└── utils/             # Utility functions
+    ├── youtube.ts
+    └── lastfm.ts
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Key Components
 
-## Deploy on Vercel
+### ModernMusicPlayer
+The main player component with YouTube integration and playback controls.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### SearchBar
+Handles music search functionality using Last.fm's API.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deployment
+
+The project is configured for GitHub Pages deployment using GitHub Actions. Each push to the main branch triggers automatic deployment.
+
+Live demo: [https://abhi-boostin.github.io/mained](https://abhi-boostin.github.io/mained)
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- Last.fm for their comprehensive music database
+- YouTube for video playback capabilities
+- Next.js team for the amazing framework
+```
+
+This README provides a comprehensive overview of your project, including:
+- Features
+- Tech stack
+- Setup instructions
+- Project structure
+- Key components
+- Deployment information
+- Contributing guidelines
+
+Feel free to modify any sections to better match your project's specific needs!

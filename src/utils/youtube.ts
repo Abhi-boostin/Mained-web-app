@@ -1,4 +1,4 @@
-const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
+const YOUTUBE_API_KEY = 'AIzaSyD8t7ziPXCP4__YQhQhIXfnuubOHLO2G_8';
 
 export const getYoutubeVideoId = async (trackName: string, artistName: string) => {
   try {
