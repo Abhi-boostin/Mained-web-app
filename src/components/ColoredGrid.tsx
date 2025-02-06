@@ -1,9 +1,10 @@
 'use client';
 
-import { Container, Grid, Paper } from '@mantine/core';
+import { Container, Grid, Paper, TextInput } from '@mantine/core';
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import FloatingLyrics from './FloatingLyrics';
+import { IconSearch } from '@tabler/icons-react';
 
 const ImageBox = ({ 
   imageId, 
@@ -153,6 +154,7 @@ const ColoredGrid = () => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [isPageLoaded, setIsPageLoaded] = useState(false);
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     setIsPageLoaded(true);
@@ -172,41 +174,84 @@ const ColoredGrid = () => {
     <div style={{
       minHeight: '100vh',
       display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
+      flexDirection: 'column',
       background: '#141414',
-      padding: '2rem',
       overflow: 'hidden',
     }}>
-      <FloatingLyrics isVisible={hoveredIndex === 0 || isMusicPlaying} />
-      <Container 
-        size="sm"
-        style={{
-          maxWidth: '800px',
-          width: '100%',
-          margin: '0 auto',
-          transform: isPageLoaded ? 'translateY(0)' : 'translateY(20px)',
-          opacity: isPageLoaded ? 1 : 0,
-          transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-        }}
-      >
-        <Grid gutter="md">
-          {gridItems.map((item, index) => (
-            <Grid.Col key={index} span={item.span}>
-              <ImageBox 
-                imageId={index + 1}
-                isHovered={hoveredIndex === index}
-                onHover={() => setHoveredIndex(index)}
-                onLeave={() => setHoveredIndex(null)}
-                delay={100 + index * 100}
-                anyHovered={hoveredIndex !== null}
-                isMusicBox={item.isMusicBox}
-                onPlayingChange={index === 0 ? setIsMusicPlaying : undefined}
-              />
-            </Grid.Col>
-          ))}
-        </Grid>
-      </Container>
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        padding: '1rem',
+        background: '#000000',
+        backdropFilter: 'blur(10px)',
+        zIndex: 100,
+      }}>
+        <Container size="sm" style={{ maxWidth: '800px' }}>
+          <TextInput
+            placeholder="Search..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.currentTarget.value)}
+            leftSection={<IconSearch size={16} />}
+            styles={{
+              root: {
+                width: '100%',
+              },
+              input: {
+                backgroundColor: '#000000',
+                color: '#ffffff',
+                border: '1px solid #333',
+                height: '45px',
+                fontSize: '16px',
+                '&:focus': {
+                  borderColor: '#666',
+                },
+              },
+              section: {
+                color: '#666',
+              },
+            }}
+          />
+        </Container>
+      </div>
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '5rem 2rem 2rem 2rem',
+      }}>
+        <FloatingLyrics isVisible={hoveredIndex === 0 || isMusicPlaying} />
+        <Container 
+          size="sm"
+          style={{
+            maxWidth: '800px',
+            width: '100%',
+            margin: '0 auto',
+            transform: isPageLoaded ? 'translateY(0)' : 'translateY(20px)',
+            opacity: isPageLoaded ? 1 : 0,
+            transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+          }}
+        >
+          <Grid gutter="md">
+            {gridItems.map((item, index) => (
+              <Grid.Col key={index} span={item.span}>
+                <ImageBox 
+                  imageId={index + 1}
+                  isHovered={hoveredIndex === index}
+                  onHover={() => setHoveredIndex(index)}
+                  onLeave={() => setHoveredIndex(null)}
+                  delay={100 + index * 100}
+                  anyHovered={hoveredIndex !== null}
+                  isMusicBox={item.isMusicBox}
+                  onPlayingChange={index === 0 ? setIsMusicPlaying : undefined}
+                />
+              </Grid.Col>
+            ))}
+          </Grid>
+        </Container>
+      </div>
     </div>
   );
 };
