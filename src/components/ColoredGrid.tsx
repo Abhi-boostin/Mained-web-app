@@ -22,7 +22,7 @@ const ImageBox = ({
   track
 }: { 
   imageId: number;
-  isHovered: boolean;
+  isHovered: boolean; 
   onHover: () => void;
   onLeave: () => void;
   delay: number;
@@ -171,12 +171,12 @@ const ColoredGrid = () => {
     { span: { base: 12, xs: 6 } },
   ]);
   const [topTracks, setTopTracks] = useState<LastFmTrack[]>([]);
-  const [visibleTracks, setVisibleTracks] = useState<number>(0);
-  const topTracksRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setIsPageLoaded(true);
+    // Fetch top tracks when component mounts
     getWeeklyTopTracks().then(tracks => {
+      // Ensure tracks have the correct structure
       const formattedTracks = tracks.map(track => ({
         name: track.name,
         artist: typeof track.artist === 'string' ? track.artist : track.artist.name,
@@ -187,33 +187,6 @@ const ColoredGrid = () => {
       setTopTracks(formattedTracks);
     });
   }, []);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            // Gradually reveal tracks when section is visible
-            const interval = setInterval(() => {
-              setVisibleTracks(prev => {
-                if (prev < topTracks.length) return prev + 1;
-                clearInterval(interval);
-                return prev;
-              });
-            }, 100);
-            observer.disconnect();
-          }
-        });
-      },
-      { threshold: 0.1 }
-    );
-
-    if (topTracksRef.current) {
-      observer.observe(topTracksRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, [topTracks.length]);
 
   const handleSearch = async (tracks: SoundCloudTrack[]) => {
     // Update grid items with search results
@@ -237,81 +210,106 @@ const ColoredGrid = () => {
       height: '100vh',
     }}>
       <SearchBar onSearch={handleSearch} />
-      <Container 
-        size="sm"
-        style={{
-          maxWidth: '800px',
-          width: '100%',
-          margin: '6rem auto 2rem',
-          paddingBottom: '4rem',
-          transform: isPageLoaded ? 'translateY(0)' : 'translateY(20px)',
-          opacity: isPageLoaded ? 1 : 0,
-          transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-        }}
-      >
-        <Grid gutter="md">
-          {gridItems.map((item, index) => (
-            <Grid.Col key={index} span={item.span}>
-              <ImageBox 
-                imageId={index + 1}
-                isHovered={hoveredIndex === index}
-                onHover={() => setHoveredIndex(index)}
-                onLeave={() => setHoveredIndex(null)}
-                delay={100 + index * 100}
-                anyHovered={hoveredIndex !== null}
-                track={item.track}
-                onPlayingChange={index === 0 ? setIsMusicPlaying : undefined}
-              />
-            </Grid.Col>
-          ))}
-        </Grid>
-      </Container>
-
-      {/* Top Tracks Section */}
-      <div
-        ref={topTracksRef}
-        style={{
-          padding: '2rem',
-          marginTop: '2rem',
-          marginBottom: '4rem',
-          textAlign: 'center',
-          opacity: isPageLoaded ? 1 : 0,
-          transform: isPageLoaded ? 'translateY(0)' : 'translateY(20px)',
-          transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-        }}
-      >
-        <h2 
-          style={{ 
-            fontSize: '36px',
-            fontWeight: 'bold',
-            fontFamily: 'BenguiatBold',
-            background: 'linear-gradient(180deg, #ff0000 0%, #300000 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            marginBottom: '1.5rem'
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: '5rem 2rem 2rem 2rem',
+        overflowY: 'auto',
+      }}>
+        <FloatingLyrics isVisible={hoveredIndex === 0 || isMusicPlaying} />
+        <Container 
+          size="sm"
+          style={{
+            maxWidth: '800px',
+            width: '100%',
+            margin: '0 auto',
+            transform: isPageLoaded ? 'translateY(0)' : 'translateY(20px)',
+            opacity: isPageLoaded ? 1 : 0,
+            transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
           }}
         >
-          Weekly Top Tracks
-        </h2>
-        <div style={{ color: '#fff' }}>
-          {topTracks.slice(0, visibleTracks).map((track, index) => (
-            <div 
-              key={index}
-              style={{
-                fontSize: '16px',
-                fontWeight: 'bold',
-                margin: '0.5rem 0',
-                opacity: 0.8,
-                transform: `translateY(${20 * (1 - Math.min(1, (index + 1) / visibleTracks))}px)`,
-                transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-                cursor: 'pointer',
-              }}
-              onMouseEnter={e => e.currentTarget.style.opacity = '1'}
-              onMouseLeave={e => e.currentTarget.style.opacity = '0.8'}
-            >
-              {index + 1}. {track.name} - {track.artist}
-            </div>
-          ))}
+          <Grid gutter="md">
+            {gridItems.map((item, index) => (
+              <Grid.Col key={index} span={item.span}>
+                <ImageBox 
+                  imageId={index + 1}
+                  isHovered={hoveredIndex === index}
+                  onHover={() => setHoveredIndex(index)}
+                  onLeave={() => setHoveredIndex(null)}
+                  delay={100 + index * 100}
+                  anyHovered={hoveredIndex !== null}
+                  track={item.track}
+                  onPlayingChange={index === 0 ? setIsMusicPlaying : undefined}
+                />
+              </Grid.Col>
+            ))}
+          </Grid>
+        </Container>
+
+        <div
+          style={{
+            marginTop: '4rem',
+            marginBottom: '4rem',
+            textAlign: 'center',
+            opacity: isPageLoaded ? 1 : 0,
+            transform: isPageLoaded ? 'translateY(0)' : 'translateY(20px)',
+            transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+          }}
+        >
+          <h2 
+            style={{ 
+              fontSize: '32px', 
+              fontWeight: 'bold',
+              background: 'linear-gradient(45deg, #ff6b6b, #ff0000)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              marginBottom: '1.5rem',
+              fontFamily: 'BenguiatBold',
+              textTransform: 'uppercase',
+              letterSpacing: '2px',
+              textShadow: '2px 2px 4px rgba(255, 0, 0, 0.2)'
+            }}
+          >
+            Weekly Top Tracks
+          </h2>
+          <div style={{ color: '#fff' }}>
+            {topTracks.map((track, index) => (
+              <div 
+                key={index}
+                style={{
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  margin: '0.8rem 0',
+                  opacity: 0.8,
+                  transition: 'all 0.3s ease',
+                  cursor: 'pointer',
+                  fontFamily: 'BenguiatBold',
+                  padding: '0.5rem',
+                  borderRadius: '4px',
+                  background: 'transparent',
+                  '&:hover': {
+                    opacity: 1,
+                    background: 'rgba(255, 0, 0, 0.1)',
+                    transform: 'translateX(10px)'
+                  }
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.opacity = '1';
+                  e.currentTarget.style.transform = 'translateX(10px)';
+                  e.currentTarget.style.background = 'rgba(255, 0, 0, 0.1)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.opacity = '0.8';
+                  e.currentTarget.style.transform = 'translateX(0)';
+                  e.currentTarget.style.background = 'transparent';
+                }}
+              >
+                {index + 1}. {track.name} - {track.artist}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

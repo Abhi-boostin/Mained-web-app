@@ -4,9 +4,10 @@ import { TextInput, Container, Loader, Paper, Stack, Text } from '@mantine/core'
 import { IconSearch } from '@tabler/icons-react';
 import { useState } from 'react';
 import { searchLastFmTracks, LastFmTrack } from '@/utils/lastfm';
+import { getYoutubeVideoId } from '@/utils/youtube';
 
 interface SearchBarProps {
-  onSearch: (track: LastFmTrack, index: number) => void;
+  onSearch: (track: LastFmTrack) => void;
 }
 
 const SearchBar = ({ onSearch }: SearchBarProps) => {
@@ -31,10 +32,17 @@ const SearchBar = ({ onSearch }: SearchBarProps) => {
     }
   };
 
-  const handleTrackSelect = (track: LastFmTrack) => {
-    onSearch(track, 1);
-    setShowResults(false);
-    setQuery('');
+  const handleTrackSelect = async (track: LastFmTrack) => {
+    try {
+      const videoId = await getYoutubeVideoId(track.name, track.artist);
+      if (videoId) {
+        onSearch({ ...track, youtubeId: videoId });
+        setShowResults(false);
+        setQuery('');
+      }
+    } catch (error) {
+      console.error('Error getting YouTube video:', error);
+    }
   };
 
   return (
@@ -48,40 +56,26 @@ const SearchBar = ({ onSearch }: SearchBarProps) => {
       backdropFilter: 'blur(10px)',
       zIndex: 100,
     }}>
-      <Container size="sm" style={{ maxWidth: '800px' }}>
+      <Container size="sm">
         <form onSubmit={handleSubmit}>
           <TextInput
-            placeholder="Search for music..."
             value={query}
-            onChange={(e) => setQuery(e.currentTarget.value)}
-            leftSection={<IconSearch size={16} />}
-            rightSection={isLoading && <Loader size="xs" color="gray" />}
-            styles={{
-              root: { width: '100%' },
-              input: {
-                backgroundColor: '#000000',
-                color: '#ffffff',
-                border: '1px solid #333',
-                height: '45px',
-                fontSize: '16px',
-                '&:focus': {
-                  borderColor: '#666',
-                },
-              },
-              section: { color: '#666' },
-            }}
+            onChange={(e) => setQuery(e.target.value)}
+            icon={isLoading ? <Loader size="xs" /> : <IconSearch size="1.1rem" stroke={1.5} />}
+            radius="xl"
+            size="md"
+            placeholder="Search for a song..."
+            rightSectionWidth={42}
+            styles={{ input: { background: '#141414', color: 'white' } }}
           />
         </form>
 
         {showResults && searchResults.length > 0 && (
           <Paper 
-            shadow="md" 
-            style={{
+            style={{ 
               marginTop: '0.5rem',
-              background: '#000000',
-              border: '1px solid #333',
-              maxHeight: '300px',
-              overflowY: 'auto',
+              background: '#141414',
+              border: '1px solid #2C2C2C'
             }}
           >
             <Stack spacing="xs">
@@ -91,14 +85,12 @@ const SearchBar = ({ onSearch }: SearchBarProps) => {
                   p="xs"
                   style={{
                     cursor: 'pointer',
-                    background: 'transparent',
-                    '&:hover': {
-                      background: '#1a1a1a',
-                    },
+                    background: '#1A1A1A',
+                    '&:hover': { background: '#2C2C2C' }
                   }}
                   onClick={() => handleTrackSelect(track)}
                 >
-                  <Text size="sm" color="white">
+                  <Text style={{ color: 'white' }}>
                     {track.name} - {track.artist}
                   </Text>
                 </Paper>
