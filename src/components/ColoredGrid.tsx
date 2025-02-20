@@ -6,73 +6,59 @@ import Image from 'next/image';
 import FloatingLyrics from './FloatingLyrics';
 import { IconSearch } from '@tabler/icons-react';
 import SearchBar from './SearchBar';
-import { SoundCloudTrack } from '@/utils/soundcloud';
 import { getWeeklyTopTracks } from '@/utils/lastfm';
 import { LastFmTrack } from '@/utils/lastfm';
 import { getYoutubeVideoId } from '@/utils/youtube';
 import { useRouter } from 'next/navigation';
 
-const ImageBox = ({ 
-  imageId, 
-  isHovered, 
-  onHover, 
-  onLeave,
-  delay,
-  anyHovered,
-  isMusicBox = false,
-  onPlayingChange,
-  track
-}: { 
-  imageId: number;
-  isHovered: boolean; 
-  onHover: () => void;
-  onLeave: () => void;
-  delay: number;
-  anyHovered: boolean;
-  isMusicBox?: boolean;
+interface ImageBoxProps {
+  src?: string;
+  alt?: string;
+  isPlaying?: boolean;
   onPlayingChange?: (isPlaying: boolean) => void;
-  track?: SoundCloudTrack;
-}) => {
+  track?: LastFmTrack;
+}
+
+const ImageBox = ({ src, alt, isPlaying: isPlayingProp, onPlayingChange, track }: ImageBoxProps) => {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlayingState, setIsPlayingState] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoaded(true);
-    }, delay);
+    }, 100);
     return () => clearTimeout(timer);
-  }, [delay]);
+  }, []);
 
   useEffect(() => {
-    if (isMusicBox && !isLocked) {
-      setIsPlaying(isHovered);
+    if (isPlayingProp) {
+      setIsPlayingState(true);
     }
-  }, [isHovered, isMusicBox, isLocked]);
+  }, [isPlayingProp]);
 
   useEffect(() => {
-    if (isMusicBox) {
-      onPlayingChange?.(isPlaying);
+    if (onPlayingChange) {
+      onPlayingChange(isPlayingState);
     }
-  }, [isPlaying, isMusicBox, onPlayingChange]);
+  }, [isPlayingState, onPlayingChange]);
 
   const handleClick = () => {
-    if (isMusicBox) {
+    if (isPlayingState) {
       if (isLocked) {
         setIsLocked(false);
-        setIsPlaying(false);
+        setIsPlayingState(false);
       } else {
         setIsLocked(true);
-        setIsPlaying(true);
+        setIsPlayingState(true);
       }
     }
   };
 
   const handleMouseLeave = () => {
-    onLeave();
-    if (isMusicBox && !isLocked) {
-      setIsPlaying(false);
+    if (!isLocked) {
+      setIsPlayingState(false);
     }
   };
 
@@ -83,36 +69,32 @@ const ImageBox = ({
         position: 'relative',
         height: '160px',
         overflow: 'hidden',
-        cursor: isMusicBox ? 'pointer' : 'default',
+        cursor: 'pointer',
         transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-        transform: isHovered 
+        transform: isPlayingState 
           ? 'scale(1.2) translateY(-1em)'
           : isLoaded 
             ? 'scale(1)' 
             : 'scale(0.95)',
         opacity: isLoaded ? 1 : 0,
-        boxShadow: isHovered 
+        boxShadow: isPlayingState 
           ? '0 25px 30px -12px rgba(0, 0, 0, 0.3)'
           : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-        zIndex: isHovered ? 2 : 1,
+        zIndex: isPlayingState ? 2 : 1,
       }}
-      onMouseEnter={onHover}
-      onMouseLeave={handleMouseLeave}
       onClick={handleClick}
+      onMouseLeave={handleMouseLeave}
     >
-      {isMusicBox ? (
+      {src ? (
         <>
           <div style={{ position: 'relative', width: '100%', height: '100%' }}>
             <Image
-              src="/images/images.jpeg"
-              alt="Album Cover"
+              src={src}
+              alt={alt}
               fill
               style={{
                 objectFit: 'cover',
                 transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                filter: !anyHovered ? 'brightness(0.5)' : 
-                        isHovered ? 'brightness(1)' : 
-                        'brightness(0.25)',
               }}
             />
           </div>
@@ -123,7 +105,7 @@ const ImageBox = ({
             scrolling="no"
             frameBorder="no"
             allow="autoplay"
-            src={isPlaying ? 
+            src={isPlayingState ? 
               "https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/suicidal-idol/ecstacy-slowed&auto_play=true" : 
               "about:blank"
             }
@@ -136,7 +118,7 @@ const ImageBox = ({
             }}
           />
           <div className="absolute bottom-2 right-2 text-white">
-            {isLocked ? '🔒 Playing' : isPlaying ? '▶ Playing' : '▶ Play'}
+            {isLocked ? '🔒 Playing' : isPlayingState ? '▶ Playing' : '▶ Play'}
           </div>
         </>
       ) : (
@@ -144,13 +126,10 @@ const ImageBox = ({
           style={{
             position: 'absolute',
             inset: 0,
-            backgroundImage: `url(https://picsum.photos/800/450?random=${imageId})`,
+            backgroundImage: `url(${track?.image})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-            filter: !anyHovered ? 'brightness(0.5)' : 
-                    isHovered ? 'brightness(1)' : 
-                    'brightness(0.25)',
           }}
         />
       )}
@@ -163,14 +142,36 @@ const ColoredGrid = () => {
   const [isPageLoaded, setIsPageLoaded] = useState(false);
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [gridItems, setGridItems] = useState<{ span: { base: number; xs: number }; isMusicBox: boolean; track?: SoundCloudTrack }[]>([
-    { span: { base: 12, xs: 4 }, isMusicBox: true },  // First item is music box
-    { span: { base: 12, xs: 8 } },
-    { span: { base: 12, xs: 8 } },
-    { span: { base: 12, xs: 4 } },
-    { span: { base: 12, xs: 3 } },
-    { span: { base: 12, xs: 3 } },
-    { span: { base: 12, xs: 6 } },
+  const [gridItems] = useState([
+    { 
+      span: { base: 12, xs: 4 }, 
+      isMusicBox: true,
+      image: 'https://picsum.photos/800/600?random=1'
+    },
+    { 
+      span: { base: 12, xs: 8 },
+      image: 'https://picsum.photos/800/600?random=2'
+    },
+    { 
+      span: { base: 12, xs: 8 },
+      image: 'https://picsum.photos/800/600?random=3'
+    },
+    { 
+      span: { base: 12, xs: 4 },
+      image: 'https://picsum.photos/800/600?random=4'
+    },
+    { 
+      span: { base: 12, xs: 3 },
+      image: 'https://picsum.photos/800/600?random=5'
+    },
+    { 
+      span: { base: 12, xs: 3 },
+      image: 'https://picsum.photos/800/600?random=6'
+    },
+    { 
+      span: { base: 12, xs: 6 },
+      image: 'https://picsum.photos/800/600?random=7'
+    }
   ]);
   const [topTracks, setTopTracks] = useState<LastFmTrack[]>([]);
   const [selectedYoutubeId, setSelectedYoutubeId] = useState<string | null>(null);
@@ -266,13 +267,9 @@ const ColoredGrid = () => {
             {gridItems.map((item, index) => (
               <Grid.Col key={index} span={item.span}>
                 <ImageBox 
-                  imageId={index + 1}
-                  isHovered={hoveredIndex === index}
-                  onHover={() => setHoveredIndex(index)}
-                  onLeave={() => setHoveredIndex(null)}
-                  delay={100 + index * 100}
-                  anyHovered={hoveredIndex !== null}
-                  track={item.track}
+                  src={item.image}
+                  alt={item.image}
+                  isPlaying={isMusicPlaying}
                   onPlayingChange={index === 0 ? setIsMusicPlaying : undefined}
                 />
               </Grid.Col>

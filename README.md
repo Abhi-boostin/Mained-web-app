@@ -1,27 +1,25 @@
-# Mained - Modern Music Player
+# Modern Music Player
 
-A sleek and modern web-based music player that combines Last.fm's music database with YouTube's playback capabilities.
+A sleek web-based music player featuring lyrics integration and a modern UI design.
 
 ## Features
 
-- 🎵 Search and play music from YouTube
-- 🎨 Beautiful, responsive UI with album artwork
+- 🎵 Play music through YouTube integration
+- 📝 View song lyrics with a dedicated lyrics button
+- 🎨 Modern, responsive user interface
+- 🔍 Search for songs using Last.fm's database
 - ⏯️ Full playback controls (play, pause, seek)
-- 🔍 Search tracks using Last.fm's extensive database
-- ❤️ Favorite tracks functionality
-- 🎨 Dynamic background based on album art
-- ⏱️ Real-time progress bar with seek functionality
+- 🖼️ Dynamic background based on album artwork
+- ⏱️ Interactive progress bar with time display
 
 ## Tech Stack
 
-- **Frontend Framework**: Next.js 15
-- **Styling**: CSS Modules & TailwindCSS
-- **Icons**: Tabler Icons
-- **UI Components**: Mantine
-- **Package Manager**: pnpm
-- **APIs**: 
-  - YouTube Data API v3
-  - Last.fm API
+- Next.js
+- TypeScript
+- Mantine UI Components
+- CSS for styling
+- YouTube API for playback
+- Last.fm API for music data
 
 ## Getting Started
 
