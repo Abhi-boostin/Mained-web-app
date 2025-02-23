@@ -137,6 +137,18 @@ const ImageBox = ({ src, alt, isPlaying: isPlayingProp, onPlayingChange, track }
   );
 };
 
+interface Artist {
+  name: string;
+}
+
+interface Track {
+  name: string;
+  artist: string | Artist;
+  image: string;
+  url: string;
+  mbid?: string;
+}
+
 const ColoredGrid = () => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [isPageLoaded, setIsPageLoaded] = useState(false);
@@ -173,7 +185,7 @@ const ColoredGrid = () => {
       image: 'https://picsum.photos/800/600?random=7'
     }
   ]);
-  const [topTracks, setTopTracks] = useState<LastFmTrack[]>([]);
+  const [topTracks, setTopTracks] = useState<Track[]>([]);
   const [selectedYoutubeId, setSelectedYoutubeId] = useState<string | null>(null);
   const [isYoutubePlayerVisible, setIsYoutubePlayerVisible] = useState(false);
   const router = useRouter();
@@ -181,7 +193,7 @@ const ColoredGrid = () => {
   useEffect(() => {
     setIsPageLoaded(true);
     // Fetch top tracks when component mounts
-    getWeeklyTopTracks().then(tracks => {
+    getWeeklyTopTracks().then((tracks: Track[]) => {
       // Ensure tracks have the correct structure
       const formattedTracks = tracks.map(track => ({
         name: track.name,
@@ -319,11 +331,6 @@ const ColoredGrid = () => {
                   padding: '0.5rem',
                   borderRadius: '4px',
                   background: 'transparent',
-                  '&:hover': {
-                    opacity: 1,
-                    background: 'rgba(255, 0, 0, 0.1)',
-                    transform: 'translateX(10px)'
-                  }
                 }}
                 onMouseEnter={e => {
                   e.currentTarget.style.opacity = '1';
