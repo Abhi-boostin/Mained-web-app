@@ -1,107 +1,84 @@
-# Modern Music Player
+# Modern Music Discovery Platform
 
-A sleek web-based music player featuring lyrics integration and a modern UI design.
+A sleek and modern music discovery platform that combines LastFM's extensive music database with YouTube's playback capabilities. The application features a dynamic grid layout, real-time track search, and an immersive music player experience.
 
 ## Features
 
-- 🎵 Play music through YouTube integration
-- 📝 View song lyrics with a dedicated lyrics button
-- 🎨 Modern, responsive user interface
-- 🔍 Search for songs using Last.fm's database
-- ⏯️ Full playback controls (play, pause, seek)
-- 🖼️ Dynamic background based on album artwork
-- ⏱️ Interactive progress bar with time display
+- 🎵 Dynamic grid layout with interactive music tiles
+- 🔍 Real-time music search functionality
+- 📊 Weekly top tracks from LastFM
+- ▶️ Integrated YouTube player
+- 🎨 Modern UI with smooth animations
+- 📱 Responsive design for all devices
 
 ## Tech Stack
 
-- Next.js
-- TypeScript
-- Mantine UI Components
-- CSS for styling
-- YouTube API for playback
-- Last.fm API for music data
+- **Frontend Framework**: Next.js (React)
+- **UI Components**: Mantine UI
+- **Styling**: CSS-in-JS
+- **Icons**: Tabler Icons
+- **APIs**: 
+  - LastFM API
+  - YouTube API
+- **Image Optimization**: Next.js Image Component
+- **State Management**: React Hooks
+- **TypeScript** for type safety
+- **ESLint** for code quality
 
 ## Getting Started
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/your-username/mained.git
-cd mained
+git clone https://github.com/yourusername/Mained-web-app.git
+cd Mained-web-app
 ```
 
 2. Install dependencies:
 ```bash
-pnpm install
+npm install
 ```
 
-3. Create a `.env.local` file with your API keys:
+3. Create a `.env.local` file in the root directory and add your API keys:
 ```env
-YOUTUBE_API_KEY=your_youtube_api_key
-LASTFM_API_KEY=your_lastfm_api_key
+NEXT_PUBLIC_LASTFM_API_KEY=your_lastfm_api_key
+NEXT_PUBLIC_YOUTUBE_API_KEY=your_youtube_api_key
 ```
+
+⚠️ **Important**: You must obtain your own API keys from:
+- [LastFM API](https://www.last.fm/api)
+- [YouTube Data API](https://developers.google.com/youtube/v3)
 
 4. Run the development server:
 ```bash
-pnpm dev
+npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to view the app.
+5. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## Project Structure
+## Environment Variables
 
-```
-src/
-├── app/                 # Next.js app directory
-├── components/         # React components
-│   ├── ModernMusicPlayer.tsx
-│   ├── SearchBar.tsx
-│   └── ColoredGrid.tsx
-├── styles/            # CSS styles
-└── utils/             # Utility functions
-    ├── youtube.ts
-    └── lastfm.ts
-```
+The following environment variables are required:
 
-## Key Components
-
-### ModernMusicPlayer
-The main player component with YouTube integration and playback controls.
-
-### SearchBar
-Handles music search functionality using Last.fm's API.
+| Variable | Description |
+|----------|-------------|
+| `NEXT_PUBLIC_LASTFM_API_KEY` | Your LastFM API key |
+| `NEXT_PUBLIC_YOUTUBE_API_KEY` | Your YouTube Data API key |
 
 ## Deployment
 
-The project is configured for GitHub Pages deployment using GitHub Actions. Each push to the main branch triggers automatic deployment.
+This project is configured for deployment on GitHub Pages. To deploy:
 
-Live demo: [https://abhi-boostin.github.io/mained](https://abhi-boostin.github.io/mained)
+1. Update the `basePath` in `next.config.js` with your repository name
+2. Configure your environment variables in your deployment platform
+3. Run the build command:
+```bash
+npm run build
+```
 
 ## Contributing
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Acknowledgments
-
-- Last.fm for their comprehensive music database
-- YouTube for video playback capabilities
-- Next.js team for the amazing framework
-```
-
-This README provides a comprehensive overview of your project, including:
-- Features
-- Tech stack
-- Setup instructions
-- Project structure
-- Key components
-- Deployment information
-- Contributing guidelines
-
-Feel free to modify any sections to better match your project's specific needs!
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
