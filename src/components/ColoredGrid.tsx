@@ -141,9 +141,10 @@ interface Artist {
   name: string;
 }
 
-interface Track {
+// Add this interface to match the LastFM API response structure
+interface FormattedTrack {
   name: string;
-  artist: string | Artist;
+  artist: string;
   image: string;
   url: string;
   mbid?: string;
@@ -185,20 +186,18 @@ const ColoredGrid = () => {
       image: 'https://picsum.photos/800/600?random=7'
     }
   ]);
-  const [topTracks, setTopTracks] = useState<Track[]>([]);
+  const [topTracks, setTopTracks] = useState<FormattedTrack[]>([]);
   const [selectedYoutubeId, setSelectedYoutubeId] = useState<string | null>(null);
   const [isYoutubePlayerVisible, setIsYoutubePlayerVisible] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     setIsPageLoaded(true);
-    // Fetch top tracks when component mounts
-    getWeeklyTopTracks().then((tracks: Track[]) => {
-      // Ensure tracks have the correct structure
+    getWeeklyTopTracks().then((tracks: LastFmTrack[]) => {
       const formattedTracks = tracks.map(track => ({
         name: track.name,
         artist: typeof track.artist === 'string' ? track.artist : track.artist.name,
-        image: track.image,
+        image: Array.isArray(track.image) && track.image.length > 0 ? track.image[0]['#text'] : '',
         url: track.url,
         mbid: track.mbid
       }));
@@ -206,7 +205,7 @@ const ColoredGrid = () => {
     });
   }, []);
 
-  const handleSearch = async (track: LastFmTrack & { youtubeId?: string }) => {
+  const handleSearch = async (track: FormattedTrack & { youtubeId?: string }) => {
     try {
       if (track.youtubeId) {
         setSelectedYoutubeId(track.youtubeId);
@@ -217,7 +216,7 @@ const ColoredGrid = () => {
     }
   };
 
-  const handleTrackClick = async (track: LastFmTrack) => {
+  const handleTrackClick = async (track: FormattedTrack) => {
     try {
       const videoId = await getYoutubeVideoId(track.name, track.artist);
       if (videoId) {
@@ -232,12 +231,9 @@ const ColoredGrid = () => {
           url: `https://youtube.com/watch?v=${videoId}`
         };
 
-        // Store track data in localStorage
         localStorage.setItem('currentTrack', JSON.stringify(playerTrack));
-        
-        // Use router.push with a complete URL
         router.push('/player');
-        router.refresh(); // Force a refresh to ensure the player loads new data
+        router.refresh();
       }
     } catch (error) {
       console.error('Error getting YouTube video:', error);
