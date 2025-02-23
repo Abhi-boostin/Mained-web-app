@@ -90,7 +90,7 @@ const ImageBox = ({ src, alt, isPlaying: isPlayingProp, onPlayingChange, track }
           <div style={{ position: 'relative', width: '100%', height: '100%' }}>
             <Image
               src={src}
-              alt={alt}
+              alt={alt || 'Music cover'}
               fill
               style={{
                 objectFit: 'cover',
