@@ -141,13 +141,22 @@ interface Artist {
   name: string;
 }
 
-// Add this interface to match the LastFM API response structure
+interface Track {
+  name: string;
+  artist: string | { name: string };
+  image: Array<{ '#text': string }>;
+  url: string;
+  mbid?: string;
+  youtubeId?: string;
+}
+
 interface FormattedTrack {
   name: string;
   artist: string;
   image: string;
   url: string;
   mbid?: string;
+  youtubeId?: string;
 }
 
 const ColoredGrid = () => {
@@ -193,8 +202,8 @@ const ColoredGrid = () => {
 
   useEffect(() => {
     setIsPageLoaded(true);
-    getWeeklyTopTracks().then((tracks: LastFmTrack[]) => {
-      const formattedTracks = tracks.map(track => ({
+    getWeeklyTopTracks().then((tracks: Track[]) => {
+      const formattedTracks: FormattedTrack[] = tracks.map((track: Track) => ({
         name: track.name,
         artist: typeof track.artist === 'string' ? track.artist : track.artist.name,
         image: Array.isArray(track.image) && track.image.length > 0 ? track.image[0]['#text'] : '',
@@ -205,7 +214,7 @@ const ColoredGrid = () => {
     });
   }, []);
 
-  const handleSearch = async (track: FormattedTrack & { youtubeId?: string }) => {
+  const handleSearch = async (track: FormattedTrack) => {
     try {
       if (track.youtubeId) {
         setSelectedYoutubeId(track.youtubeId);
