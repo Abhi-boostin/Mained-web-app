@@ -35,28 +35,39 @@ const SearchBar = () => {
   const handleTrackSelect = async (track: LastFmTrack) => {
     try {
       setIsLoading(true);
-      console.log('Searching for track:', track.name, 'by', track.artist);
-      
       const youtubeId = await getYoutubeVideoId(track.name, track.artist);
-      console.log('YouTube video ID result:', youtubeId);
       
       if (!youtubeId) {
         alert('Could not find this song on YouTube');
         return;
       }
 
+      // Get high quality thumbnail from YouTube
+      const thumbnailUrl = `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg`;
+      
+      // Fallback to medium quality if maxresdefault doesn't exist
+      const fallbackUrl = `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`;
+
+      // Check if high quality thumbnail exists
+      const checkImage = async (url: string) => {
+        try {
+          const res = await fetch(url);
+          return res.ok;
+        } catch {
+          return false;
+        }
+      };
+
+      const coverUrl = await checkImage(thumbnailUrl) ? thumbnailUrl : fallbackUrl;
+
       const trackData = {
         name: track.name,
         artist: track.artist,
-        cover: track.image || '/default-cover.jpg',
+        cover: coverUrl,
         youtubeId: youtubeId
       };
 
-      // Save to localStorage with autoplay flag
       localStorage.setItem('currentTrack', JSON.stringify(trackData));
-      localStorage.setItem('shouldAutoplay', 'true');
-
-      // Navigate to player
       router.push('/player');
     } catch (error) {
       console.error('Error selecting track:', error);
@@ -83,7 +94,7 @@ const SearchBar = () => {
           <TextInput
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            icon={isLoading ? <Loader size="xs" /> : <IconSearch size="1.1rem" stroke={1.5} />}
+            leftSection={isLoading ? <Loader size="xs" /> : <IconSearch size="1.1rem" stroke={1.5} />}
             radius="xl"
             size="md"
             placeholder="Search for a song..."
@@ -100,7 +111,7 @@ const SearchBar = () => {
               border: '1px solid #2C2C2C'
             }}
           >
-            <Stack spacing="xs">
+            <Stack gap="xs">
               {searchResults.map((track, index) => (
                 <Paper
                   key={index}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { IconPlayerPlay, IconPlayerPause, IconPlayerSkipForward, IconPlayerSkipBack, IconHeart, IconMicrophone } from '@tabler/icons-react';
 import '@/styles/ModernMusicPlayer.css';
 import Lyrics from './Lyrics';
@@ -27,7 +27,8 @@ const ModernMusicPlayer = () => {
   const [youtubePlayer, setYoutubePlayer] = useState<any>(null);
   const [isFavorited, setIsFavorited] = useState(false);
   const [showLyrics, setShowLyrics] = useState(false);
-  const [progressInterval, setProgressInterval] = useState<NodeJS.Timer | null>(null);
+  const [currentTime, setCurrentTime] = useState(0);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const [isPlayerReady, setIsPlayerReady] = useState(false);
 
   useEffect(() => {
@@ -81,27 +82,11 @@ const ModernMusicPlayer = () => {
           },
           events: {
             onReady: (event: any) => {
-              const player = event.target;
-              setYoutubePlayer(player);
-              setDuration(player.getDuration());
+              console.log('YouTube player ready');
+              setYoutubePlayer(event.target);
+              setDuration(event.target.getDuration());
               setIsPlayerReady(true);
-              
-              // Handle mobile autoplay
-              const startPlayback = async () => {
-                try {
-                  await player.playVideo();
-                  document.removeEventListener('touchstart', startPlayback);
-                } catch (error) {
-                  console.error('Playback error:', error);
-                }
-              };
-
-              if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-                document.addEventListener('touchstart', startPlayback);
-              } else {
-                player.playVideo();
-              }
-              
+              event.target.playVideo();
               startProgressUpdate();
             },
             onStateChange: (event: any) => {
@@ -115,6 +100,7 @@ const ModernMusicPlayer = () => {
                 setIsPlaying(false);
                 stopProgressUpdate();
                 setProgress(0);
+                setCurrentTime(0);
               }
             },
             onError: (event: any) => {
@@ -143,43 +129,37 @@ const ModernMusicPlayer = () => {
 
   const startProgressUpdate = () => {
     console.log('Starting progress updates');
-    if (progressInterval) {
-      clearInterval(progressInterval);
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
     }
     
     const interval = setInterval(() => {
-      if (youtubePlayer && typeof youtubePlayer.getCurrentTime === 'function') {
+      if (youtubePlayer?.getCurrentTime && isPlayerReady) {
         try {
-          const currentTime = youtubePlayer.getCurrentTime();
-          const totalDuration = youtubePlayer.getDuration();
+          const current = youtubePlayer.getCurrentTime();
+          const total = youtubePlayer.getDuration();
           
-          console.log('Current time:', currentTime, 'Duration:', totalDuration);
-          
-          if (isNaN(currentTime) || isNaN(totalDuration)) {
-            console.warn('Invalid time values:', { currentTime, totalDuration });
-            return;
+          if (!isNaN(current) && !isNaN(total) && total > 0) {
+            setCurrentTime(current);
+            setProgress((current / total) * 100);
+            
+            if (total !== duration) {
+              setDuration(total);
+            }
           }
-          
-          if (totalDuration !== duration) {
-            setDuration(totalDuration);
-          }
-          
-          const progressPercentage = (currentTime / totalDuration) * 100;
-          setProgress(progressPercentage);
         } catch (error) {
-          console.error('Error updating progress:', error);
-          stopProgressUpdate();
+          console.error('Error in progress update:', error);
         }
       }
-    }, 100);
+    }, 100); // Update 10 times per second for smoother updates
     
-    setProgressInterval(interval);
+    intervalRef.current = interval;
   };
 
   const stopProgressUpdate = () => {
-    if (progressInterval) {
-      clearInterval(progressInterval);
-      setProgressInterval(null);
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
     }
   };
 
@@ -265,9 +245,7 @@ const ModernMusicPlayer = () => {
           <div className="progress-time">
             {youtubePlayer && isPlayerReady && (
               <>
-                <span>
-                  {formatTime(youtubePlayer.getCurrentTime?.() || 0)}
-                </span>
+                <span>{formatTime(currentTime)}</span>
                 <span>{formatTime(duration)}</span>
               </>
             )}
