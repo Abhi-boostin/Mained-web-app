@@ -199,19 +199,43 @@ const ColoredGrid = () => {
   const [selectedYoutubeId, setSelectedYoutubeId] = useState<string | null>(null);
   const [isYoutubePlayerVisible, setIsYoutubePlayerVisible] = useState(false);
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setIsPageLoaded(true);
-    getWeeklyTopTracks().then((tracks: Track[]) => {
-      const formattedTracks: FormattedTrack[] = tracks.map((track: Track) => ({
-        name: track.name,
-        artist: typeof track.artist === 'string' ? track.artist : track.artist.name,
-        image: Array.isArray(track.image) && track.image.length > 0 ? track.image[0]['#text'] : '',
-        url: track.url,
-        mbid: track.mbid
-      }));
-      setTopTracks(formattedTracks);
-    });
+    setIsLoading(true);
+    
+    // Check if API key exists
+    const lastfmKey = process.env.NEXT_PUBLIC_LASTFM_API_KEY;
+    if (!lastfmKey) {
+      setError('LastFM API key not configured');
+      setIsLoading(false);
+      return;
+    }
+
+    getWeeklyTopTracks()
+      .then((tracks: Track[]) => {
+        if (!tracks || tracks.length === 0) {
+          setError('No tracks available');
+          return;
+        }
+        const formattedTracks: FormattedTrack[] = tracks.map((track: Track) => ({
+          name: track.name,
+          artist: typeof track.artist === 'string' ? track.artist : track.artist.name,
+          image: Array.isArray(track.image) && track.image.length > 0 ? track.image[0]['#text'] : '',
+          url: track.url,
+          mbid: track.mbid
+        }));
+        setTopTracks(formattedTracks);
+      })
+      .catch((err) => {
+        console.error('Error fetching tracks:', err);
+        setError('Failed to load tracks. Please check your internet connection.');
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   }, []);
 
   const handleSearch = async (track: FormattedTrack) => {
@@ -255,11 +279,44 @@ const ColoredGrid = () => {
       display: 'flex',
       flexDirection: 'column',
       background: '#141414',
-      position: 'relative',
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      width: '100%',
+      height: '100%',
       overflowY: 'auto',
-      height: '100vh',
+      margin: 0,
+      padding: 0
     }}>
       <SearchBar />
+      {error && (
+        <div style={{ 
+          color: 'white', 
+          textAlign: 'center', 
+          padding: '20px',
+          background: 'rgba(255, 0, 0, 0.1)',
+          margin: '20px',
+          borderRadius: '8px',
+          fontSize: '16px',
+          zIndex: 1
+        }}>
+          {error}
+          <div style={{ marginTop: '10px', fontSize: '14px', opacity: 0.8 }}>
+            Please make sure all environment variables are configured properly.
+          </div>
+        </div>
+      )}
+      {isLoading && (
+        <div style={{ 
+          color: 'white', 
+          textAlign: 'center', 
+          padding: '20px' 
+        }}>
+          Loading...
+        </div>
+      )}
       <div style={{
         flex: 1,
         display: 'flex',
@@ -267,6 +324,10 @@ const ColoredGrid = () => {
         alignItems: 'center',
         padding: 'clamp(1rem, 5vw, 5rem) clamp(1rem, 3vw, 2rem)',
         overflowY: 'auto',
+        width: '100%',
+        height: '100%',
+        position: 'relative',
+        zIndex: 1
       }}>
         <FloatingLyrics isVisible={hoveredIndex === 0 || isMusicPlaying} />
         <Container 
