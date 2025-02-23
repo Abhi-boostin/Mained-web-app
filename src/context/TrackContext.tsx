@@ -2,6 +2,15 @@
 
 import { createContext, useContext, useState } from 'react';
 
+interface Track {
+  name: string;
+  artist: string | { name: string };
+  image: Array<{ '#text': string }>;
+  url: string;
+  mbid?: string;
+  youtubeId?: string;
+}
+
 interface TrackContextType {
   selectedTrack: Track | null;
   setSelectedTrack: (track: Track | null) => void;
