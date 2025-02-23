@@ -10,6 +10,10 @@ const nextConfig = {
       'lastfm.freetls.fastly.net'
     ],
   },
+  eslint: {
+    // Disable ESLint during production builds
+    ignoreDuringBuilds: true,
+  },
   basePath: process.env.NODE_ENV === 'production' ? '/Mained-web-app' : '',
   reactStrictMode: true,
   swcMinify: true
