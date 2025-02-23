@@ -1,4 +1,4 @@
-const YOUTUBE_API_KEY = 'AIzaSyCWKP4aN2WDnxJep80INg3NHSNUgRUjdjA';
+const YOUTUBE_API_KEY = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY;
 
 export const getYoutubeVideoId = async (trackName: string, artistName: string) => {
   const cache: { [key: string]: string } = {};

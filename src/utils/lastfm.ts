@@ -1,4 +1,4 @@
-const LASTFM_API_KEY = "3221066b9842ad9d48222f6a9f1d27bc";
+const LASTFM_API_KEY = process.env.NEXT_PUBLIC_LASTFM_API_KEY;
 const LASTFM_API_URL = 'https://ws.audioscrobbler.com/2.0/';
 
 export interface LastFmTrack {
