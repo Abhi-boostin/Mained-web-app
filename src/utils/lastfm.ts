@@ -9,20 +9,32 @@ export interface LastFmTrack {
   mbid?: string;
 }
 
+export interface LastFmApiResponse {
+  results: {
+    trackmatches: {
+      track: LastFmTrack[];
+    };
+  };
+}
+
 export const searchLastFmTracks = async (query: string): Promise<LastFmTrack[]> => {
   try {
     const response = await fetch(
-      `${LASTFM_API_URL}?method=track.search&track=${encodeURIComponent(query)}&api_key=${LASTFM_API_KEY}&format=json&limit=10`
+      `${LASTFM_API_URL}?method=track.search&track=${encodeURIComponent(
+        query
+      )}&api_key=${LASTFM_API_KEY}&format=json`
     );
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch from Last.fm');
-    }
 
-    const data = await response.json();
-    return data.results?.trackmatches?.track || [];
+    const data = (await response.json()) as LastFmApiResponse;
+    return data.results.trackmatches.track.map((track) => ({
+      name: track.name,
+      artist: track.artist,
+      url: track.url,
+      image: track.image,
+      mbid: track.mbid
+    }));
   } catch (error) {
-    console.error('Last.fm search error:', error);
+    console.error('LastFM search error:', error);
     return [];
   }
 };

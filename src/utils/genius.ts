@@ -1,5 +1,6 @@
-const GENIUS_API_KEY = '7j7A-HIpaGLtfXIVku3nzNUQ2xQAa__WOrQAliXRVkcTFVI6QIpBKnvneWMs0CpT';
-const GENIUS_API_BASE = 'https://api.genius.com';
+// Remove unused constants since we're not using the Genius API directly
+// const GENIUS_API_KEY = '...';
+// const GENIUS_API_BASE = '...';
 
 export const searchSong = async (title: string, artist: string) => {
   try {

@@ -7,8 +7,6 @@ import { searchLastFmTracks, LastFmTrack } from '@/utils/lastfm';
 import { getYoutubeVideoId } from '@/utils/youtube';
 import { useRouter } from 'next/navigation';
 
-interface SearchBarProps {}
-
 const SearchBar = () => {
   const [query, setQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
