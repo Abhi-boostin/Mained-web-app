@@ -199,31 +199,19 @@ const ColoredGrid = () => {
   const [selectedYoutubeId, setSelectedYoutubeId] = useState<string | null>(null);
   const [isYoutubePlayerVisible, setIsYoutubePlayerVisible] = useState(false);
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     setIsPageLoaded(true);
-    setIsLoading(true);
-    getWeeklyTopTracks()
-      .then((tracks: Track[]) => {
-        const formattedTracks: FormattedTrack[] = tracks.map((track: Track) => ({
-          name: track.name,
-          artist: typeof track.artist === 'string' ? track.artist : track.artist.name,
-          image: Array.isArray(track.image) && track.image.length > 0 ? track.image[0]['#text'] : '',
-          url: track.url,
-          mbid: track.mbid
-        }));
-        setTopTracks(formattedTracks);
-        setError(null);
-      })
-      .catch((err) => {
-        console.error('Error fetching tracks:', err);
-        setError('Failed to load tracks. Please try again later.');
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+    getWeeklyTopTracks().then((tracks: Track[]) => {
+      const formattedTracks: FormattedTrack[] = tracks.map((track: Track) => ({
+        name: track.name,
+        artist: typeof track.artist === 'string' ? track.artist : track.artist.name,
+        image: Array.isArray(track.image) && track.image.length > 0 ? track.image[0]['#text'] : '',
+        url: track.url,
+        mbid: track.mbid
+      }));
+      setTopTracks(formattedTracks);
+    });
   }, []);
 
   const handleSearch = async (track: FormattedTrack) => {
@@ -260,43 +248,6 @@ const ColoredGrid = () => {
       console.error('Error getting YouTube video:', error);
     }
   };
-
-  if (error) {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        background: '#141414',
-        color: '#ff6b6b',
-        padding: '2rem',
-        textAlign: 'center'
-      }}>
-        <h2>Error</h2>
-        <p>{error}</p>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        background: '#141414',
-        color: '#fff',
-        padding: '2rem',
-        textAlign: 'center'
-      }}>
-        <h2>Loading...</h2>
-      </div>
-    );
-  }
 
   return (
     <div style={{
