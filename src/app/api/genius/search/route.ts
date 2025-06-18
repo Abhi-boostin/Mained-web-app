@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-const GENIUS_API_KEY = '7j7A-HIpaGLtfXIVku3nzNUQ2xQAa__WOrQAliXRVkcTFVI6QIpBKnvneWMs0CpT';
+const GENIUS_API_KEY = process.env.NEXT_PUBLIC_GENIUS_API_KEY;
 const GENIUS_API_BASE = 'https://api.genius.com';
 
 export async function POST(request: Request) {

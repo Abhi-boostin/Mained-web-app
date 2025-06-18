@@ -30,6 +30,12 @@ const ModernMusicPlayer = () => {
   const [currentTime, setCurrentTime] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const [isPlayerReady, setIsPlayerReady] = useState(false);
+  const [playerError, setPlayerError] = useState(false);
+
+  const isMobile = () => {
+    if (typeof navigator === 'undefined') return false;
+    return /Mobi|Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+  };
 
   useEffect(() => {
     const loadYouTubeAPI = () => {
@@ -38,12 +44,9 @@ const ModernMusicPlayer = () => {
           resolve();
           return;
         }
-
         const tag = document.createElement('script');
         tag.src = 'https://www.youtube.com/iframe_api';
-        const firstScriptTag = document.getElementsByTagName('script')[0];
-        firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
-
+        document.body.appendChild(tag);
         window.onYouTubeIframeAPIReady = () => {
           resolve();
         };
@@ -53,36 +56,39 @@ const ModernMusicPlayer = () => {
     const initializePlayer = async () => {
       const savedTrack = localStorage.getItem('currentTrack');
       if (!savedTrack) return;
-
       const track = JSON.parse(savedTrack);
       setCurrentTrack(track);
 
+      if (isMobile()) {
+        // On mobile, open in new tab and show a message
+        window.open(`https://m.youtube.com/watch?v=${track.youtubeId}`, '_blank');
+        setTimeout(() => {
+          setCurrentTrack(null);
+        }, 1000);
+        return;
+      }
+
       try {
         await loadYouTubeAPI();
-
         const player = new window.YT.Player('youtube-player', {
           width: '200',
           height: '200',
           videoId: track.youtubeId,
           playerVars: {
             autoplay: 1,
-            controls: 0,
-            disablekb: 1,
-            fs: 0,
+            controls: 1,
             rel: 0,
             modestbranding: 1,
             playsinline: 1,
             origin: window.location.origin,
             enablejsapi: 1,
             host: 'https://www.youtube.com',
-            // Add mobile-specific options
             mute: 0,
             showinfo: 0,
             iv_load_policy: 3
           },
           events: {
             onReady: (event: any) => {
-              console.log('YouTube player ready');
               setYoutubePlayer(event.target);
               setDuration(event.target.getDuration());
               setIsPlayerReady(true);
@@ -104,16 +110,13 @@ const ModernMusicPlayer = () => {
               }
             },
             onError: (event: any) => {
-              console.error('YouTube player error:', event.data);
-              if (event.data === 150) {
-                window.open(`https://www.youtube.com/watch?v=${track.youtubeId}`, '_blank');
-              }
+              setPlayerError(true);
               stopProgressUpdate();
             }
           }
         });
       } catch (error) {
-        console.error('Error initializing player:', error);
+        setPlayerError(true);
       }
     };
 
@@ -121,8 +124,16 @@ const ModernMusicPlayer = () => {
 
     return () => {
       stopProgressUpdate();
-      if (youtubePlayer) {
-        youtubePlayer.destroy();
+      if (youtubePlayer && typeof youtubePlayer.destroy === 'function') {
+        try {
+          // Only destroy if the iframe is still in the DOM
+          const iframe = youtubePlayer.getIframe && youtubePlayer.getIframe();
+          if (iframe && iframe.parentNode) {
+            youtubePlayer.destroy();
+          }
+        } catch (e) {
+          // Ignore errors if already destroyed or node is missing
+        }
       }
     };
   }, []);
@@ -210,6 +221,13 @@ const ModernMusicPlayer = () => {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
+  if (playerError) {
+    return (
+      <div className="modern-player-error">
+        <p>Playback is not supported on this device or browser. Please open the song in the YouTube app or try on desktop.</p>
+      </div>
+    );
+  }
   if (!currentTrack) return null;
 
   return (

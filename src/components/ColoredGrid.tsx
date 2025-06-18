@@ -1,10 +1,8 @@
 'use client';
 
-import { Container, Grid, Paper, TextInput } from '@mantine/core';
+import { Container, Grid, Paper } from '@mantine/core';
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import FloatingLyrics from './FloatingLyrics';
-import { IconSearch } from '@tabler/icons-react';
 import SearchBar from './SearchBar';
 import { getWeeklyTopTracks } from '@/utils/lastfm';
 import { LastFmTrack } from '@/utils/lastfm';
@@ -16,14 +14,12 @@ interface ImageBoxProps {
   alt?: string;
   isPlaying?: boolean;
   onPlayingChange?: (isPlaying: boolean) => void;
-  track?: LastFmTrack;
 }
 
-const ImageBox = ({ src, alt, isPlaying: isPlayingProp, onPlayingChange, track }: ImageBoxProps) => {
+const ImageBox = ({ src, alt, isPlaying: isPlayingProp, onPlayingChange }: ImageBoxProps) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isPlayingState, setIsPlayingState] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -98,48 +94,14 @@ const ImageBox = ({ src, alt, isPlaying: isPlayingProp, onPlayingChange, track }
               }}
             />
           </div>
-          <iframe
-            ref={iframeRef}
-            width="100%"
-            height="100%"
-            scrolling="no"
-            frameBorder="no"
-            allow="autoplay"
-            src={isPlayingState ? 
-              "https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/suicidal-idol/ecstacy-slowed&auto_play=true" : 
-              "about:blank"
-            }
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              opacity: 0,
-              pointerEvents: 'none',
-            }}
-          />
           <div className="absolute bottom-2 right-2 text-white">
             {isLocked ? '🔒 Playing' : isPlayingState ? '▶ Playing' : '▶ Play'}
           </div>
         </>
-      ) : (
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            backgroundImage: `url(${track?.image})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-          }}
-        />
-      )}
+      ) : null}
     </Paper>
   );
 };
-
-interface Artist {
-  name: string;
-}
 
 interface Track {
   name: string;
@@ -160,39 +122,13 @@ interface FormattedTrack {
 }
 
 const ColoredGrid = () => {
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [isPageLoaded, setIsPageLoaded] = useState(false);
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [gridItems] = useState([
-    { 
-      span: { base: 12, xs: 4 }, 
-      isMusicBox: true,
-      image: 'https://picsum.photos/800/600?random=1'
-    },
-    { 
-      span: { base: 12, xs: 8 },
-      image: 'https://picsum.photos/800/600?random=2'
-    },
-    { 
-      span: { base: 12, xs: 8 },
-      image: 'https://picsum.photos/800/600?random=3'
-    },
-    { 
-      span: { base: 12, xs: 4 },
-      image: 'https://picsum.photos/800/600?random=4'
-    },
-    { 
-      span: { base: 12, xs: 3 },
-      image: 'https://picsum.photos/800/600?random=5'
-    },
-    { 
-      span: { base: 12, xs: 3 },
-      image: 'https://picsum.photos/800/600?random=6'
-    },
-    { 
-      span: { base: 12, xs: 6 },
-      image: 'https://picsum.photos/800/600?random=7'
+    {
+      span: { base: 12, xs: 14 },
+      image: 'https://cdn.oneesports.gg/cdn-data/2024/02/Jujutsu_Kaisen_Toji_Zenin-1.jpg',
+      link: 'https://github.com/Abhi-boostin'
     }
   ]);
   const [topTracks, setTopTracks] = useState<FormattedTrack[]>([]);
@@ -237,17 +173,6 @@ const ColoredGrid = () => {
         setIsLoading(false);
       });
   }, []);
-
-  const handleSearch = async (track: FormattedTrack) => {
-    try {
-      if (track.youtubeId) {
-        setSelectedYoutubeId(track.youtubeId);
-        setIsYoutubePlayerVisible(true);
-      }
-    } catch (error) {
-      console.error('Error handling search:', error);
-    }
-  };
 
   const handleTrackClick = async (track: FormattedTrack) => {
     try {
@@ -327,9 +252,9 @@ const ColoredGrid = () => {
         width: '100%',
         height: '100%',
         position: 'relative',
-        zIndex: 1
+        zIndex: 1,
+        marginTop: '5rem'
       }}>
-        <FloatingLyrics isVisible={hoveredIndex === 0 || isMusicPlaying} />
         <Container 
           size="sm"
           style={{
@@ -344,12 +269,14 @@ const ColoredGrid = () => {
           <Grid gutter="md">
             {gridItems.map((item, index) => (
               <Grid.Col key={index} span={item.span}>
-                <ImageBox 
-                  src={item.image}
-                  alt={item.image}
-                  isPlaying={isMusicPlaying}
-                  onPlayingChange={index === 0 ? setIsMusicPlaying : undefined}
-                />
+                <div onClick={() => window.open(item.link, '_blank')} style={{ cursor: 'pointer', width: '100%', height: '100%' }}>
+                  <ImageBox 
+                    src={item.image}
+                    alt={item.image}
+                    isPlaying={isMusicPlaying}
+                    onPlayingChange={index === 0 ? setIsMusicPlaying : undefined}
+                  />
+                </div>
               </Grid.Col>
             ))}
           </Grid>

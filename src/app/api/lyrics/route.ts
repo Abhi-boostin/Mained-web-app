@@ -40,12 +40,20 @@ export async function POST(request: Request) {
       const container = $(selector);
       if (container.length) {
         container.each((_, elem) => {
-          const text = $(elem)
-            .html()
-            ?.replace(/<br\/?>/g, '\n')
-            .replace(/<(?!\/?br)[^>]+>/g, '')
-            || '';
-          lyrics += text + '\n';
+          let html = $(elem).html() || '';
+          // Replace <br> and <br/> with newlines
+          html = html.replace(/<br\s*\/?>/gi, '\n');
+          // Remove all other HTML tags
+          html = html.replace(/<[^>]+>/g, '');
+          // Decode HTML entities
+          html = html.replace(/&amp;/g, '&')
+                     .replace(/&quot;/g, '"')
+                     .replace(/&#x27;/g, "'")
+                     .replace(/&lt;/g, '<')
+                     .replace(/&gt;/g, '>');
+          // Remove trailing spaces on each line
+          html = html.split('\n').map(line => line.trimEnd()).join('\n');
+          lyrics += html + '\n';
         });
         if (lyrics.trim()) break;
       }
@@ -55,21 +63,25 @@ export async function POST(request: Request) {
     if (!lyrics.trim()) {
       lyrics = $('body')
         .text()
-        .replace(/\s+/g, ' ')
+        .replace(/\r?\n/g, '\n')
+        .replace(/\n{3,}/g, '\n\n')
         .trim();
     }
-    
-    // Clean up the lyrics
+
+    // Clean up the lyrics: collapse 3+ newlines to 2, trim, and ensure spacing
     lyrics = lyrics
-      .replace(/\[/g, '\n[')
-      .replace(/\]/g, ']\n')
       .replace(/\n{3,}/g, '\n\n')
-      .replace(/&amp;/g, '&')
-      .replace(/&quot;/g, '"')
-      .replace(/&#x27;/g, "'")
-      .replace(/\s+/g, ' ')
-      .trim();
-    
+      .replace(/ +/g, ' ')
+      .replace(/^\s+|\s+$/g, '')
+      .replace(/\n{2,}/g, '\n\n');
+
+    // Remove everything before the first section header (e.g., [Intro], [Verse], [Chorus], etc.)
+    const sectionHeaderRegex = /\[(Intro|Verse|Chorus|Refrain|Bridge|Breakdown|Outro)[^\]]*\]/i;
+    const match = lyrics.match(sectionHeaderRegex);
+    if (match && match.index !== undefined) {
+      lyrics = lyrics.slice(match.index).trim();
+    }
+
     if (!lyrics) {
       return NextResponse.json(
         { error: 'No lyrics found on page' },
