@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
   images: {
     unoptimized: true,
     domains: [
@@ -11,12 +10,11 @@ const nextConfig = {
     ],
   },
   eslint: {
-    // Disable ESLint during production builds
     ignoreDuringBuilds: true,
   },
-  basePath: process.env.NODE_ENV === 'production' ? '/Mained-web-app' : '',
+  // Remove this line:
+  // basePath: process.env.NODE_ENV === 'production' ? '/Mained-web-app' : '',
   reactStrictMode: true,
-  swcMinify: true
 }
 
-module.exports = nextConfig 
+module.exports = nextConfig
