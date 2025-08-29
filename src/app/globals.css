@@ -5,14 +5,6 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
-  --space: 1rem;
-  --bg: #09090b;
-  --fg: #e3e3e3;
-  --surface-1: #101012;
-  --surface-2: #27272a;
-  --surface-3: #52525b;
-  --ease-out: cubic-bezier(0.5, 1, 0.89, 1);
-  --ease-in-out: cubic-bezier(0.45, 0, 0.55, 1);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -24,69 +16,6 @@
 
 body {
   color: var(--foreground);
-  background: #141414;
-  overflow: hidden;
+  background: var(--background);
   font-family: var(--font-geist-sans);
-}
-
-.card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    circle at bottom left,
-    transparent 55%,
-    var(--surface-1)
-  );
-  pointer-events: none;
-  box-shadow: var(--bg) -0.5cqi 0.5cqi 2.5cqi inset;
-  transition: opacity 500ms var(--ease-out);
-  z-index: 1;
-}
-
-.card::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  margin: auto;
-  aspect-ratio: 1;
-  opacity: 0;
-  transition: opacity 500ms var(--ease-out);
-  z-index: 1;
-  pointer-events: none;
-}
-
-.card:hover::before {
-  opacity: 0;
-}
-
-.card:hover::after {
-  opacity: 0;
-}
-
-.pixelate-transition {
-  transition: filter 1s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-@keyframes fadeOutPixels {
-  0% { filter: url(#pixelate) brightness(1.1); }
-  100% { filter: none; }
-}
-
-.fade-out-pixels {
-  animation: fadeOutPixels 1s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-@font-face {
-  font-family: 'BenguiatBold';
-  src: url('/fonts/Benguiat-Bold.ttf') format('truetype');
-  font-weight: bold;
-  font-style: normal;
-}
-
-@keyframes fadeInOut {
-  0% { opacity: 0; transform: translateY(20px); }
-  10% { opacity: 1; transform: translateY(0); }
-  90% { opacity: 1; transform: translateY(0); }
-  100% { opacity: 0; transform: translateY(-20px); }
 }
