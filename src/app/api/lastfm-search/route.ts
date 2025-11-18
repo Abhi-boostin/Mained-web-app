@@ -33,7 +33,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ tracks: [] });
     }
 
-    const tracks = data.results.trackmatches.track.map((track: any) => ({
+    const trackList = Array.isArray(data.results.trackmatches.track) 
+      ? data.results.trackmatches.track 
+      : [data.results.trackmatches.track];
+
+    const tracks = trackList.map((track: {
+      name: string;
+      artist: string;
+      image?: Array<{ '#text': string; size: string }>;
+    }) => ({
       name: track.name,
       artist: track.artist,
       image: track.image?.[2]?.["#text"] || track.image?.[1]?.["#text"] || track.image?.[0]?.["#text"]

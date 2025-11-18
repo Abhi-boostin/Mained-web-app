@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import YouTube from "react-youtube";
 import { YouTubeEvent, GeniusSearchResponse, LyricsResponse } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -41,7 +42,16 @@ export default function EnhancedMusicPlayer() {
   const [loadingLyrics, setLoadingLyrics] = useState(false);
   const [showLyrics, setShowLyrics] = useState(false);
   
-  const playerRef = useRef<any>(null);
+  const playerRef = useRef<{
+    getCurrentTime: () => number;
+    getDuration: () => number;
+    seekTo: (seconds: number, allowSeekAhead: boolean) => void;
+    playVideo: () => void;
+    pauseVideo: () => void;
+    setVolume: (volume: number) => void;
+    mute: () => void;
+    unMute: () => void;
+  } | null>(null);
   const progressInterval = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -161,8 +171,17 @@ export default function EnhancedMusicPlayer() {
   };
 
   const handlePlayerReady = (event: YouTubeEvent) => {
-    playerRef.current = event.target;
-    const player = event.target as any;
+    const player = event.target as {
+      getCurrentTime: () => number;
+      getDuration: () => number;
+      seekTo: (seconds: number, allowSeekAhead: boolean) => void;
+      playVideo: () => void;
+      pauseVideo: () => void;
+      setVolume: (volume: number) => void;
+      mute: () => void;
+      unMute: () => void;
+    };
+    playerRef.current = player;
     setDuration(player.getDuration());
     if (volume !== 50) {
       player.setVolume(volume);
@@ -173,8 +192,7 @@ export default function EnhancedMusicPlayer() {
     setIsPlaying(event.data === 1);
     
     if (event.data === 1 && playerRef.current) {
-      const player = playerRef.current as any;
-      setDuration(player.getDuration());
+      setDuration(playerRef.current.getDuration());
     }
   };
 
@@ -288,9 +306,9 @@ export default function EnhancedMusicPlayer() {
                     onClick={() => handleTrackSelect(track)}
                     className="flex items-center gap-3 p-3 bg-white/5 hover:bg-white/10 rounded-lg cursor-pointer transition-all group"
                   >
-                    <div className="w-12 h-12 bg-gradient-to-br from-green-400 via-blue-500 to-purple-600 rounded-lg overflow-hidden flex-shrink-0">
+                    <div className="w-12 h-12 bg-gradient-to-br from-green-400 via-blue-500 to-purple-600 rounded-lg overflow-hidden flex-shrink-0 relative">
                       {track.image ? (
-                        <img src={track.image} alt={track.name} className="w-full h-full object-cover" />
+                        <Image src={track.image} alt={track.name} fill className="object-cover" unoptimized />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
                           <Music2 className="w-6 h-6 text-white" />
@@ -317,12 +335,14 @@ export default function EnhancedMusicPlayer() {
             <CardContent className="p-4 md:p-6">
               {/* Track Info */}
               <div className="flex items-center gap-4 mb-6">
-                <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-green-400 via-blue-500 to-purple-600 rounded-2xl flex items-center justify-center overflow-hidden flex-shrink-0 shadow-2xl">
+                <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-green-400 via-blue-500 to-purple-600 rounded-2xl flex items-center justify-center overflow-hidden flex-shrink-0 shadow-2xl relative">
                   {selectedTrack.image ? (
-                    <img 
+                    <Image 
                       src={selectedTrack.image} 
                       alt={selectedTrack.name} 
-                      className="w-full h-full object-cover" 
+                      fill
+                      className="object-cover"
+                      unoptimized
                     />
                   ) : (
                     <Music2 className="w-10 h-10 md:w-12 md:h-12 text-white" />
